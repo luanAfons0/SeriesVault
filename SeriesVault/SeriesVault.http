@@ -1,0 +1,6 @@
+@SeriesVault_HostAddress = http://localhost:5281
+
+GET {{SeriesVault_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
