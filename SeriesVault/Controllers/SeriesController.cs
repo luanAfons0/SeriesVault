@@ -1,50 +1,52 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SeriesVault.Data;
 
 namespace SeriesVault.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class SeriesController : ControllerBase
+    [Route("api/")]
+    public class SeriesController(SeriesDbContext seriesDBContext) : ControllerBase
     {
-        static private List<Series> _seriesList = new List<Series>();
+        private readonly SeriesDbContext _dbContext = seriesDBContext;
         
-        [HttpGet(Name = "GetSeries")]
-        public ActionResult<Series[]> GetSeries()
+        [HttpGet("series")]
+        public async Task<ActionResult<List<Series>>> GetSeries()
         {
-            return Ok(_seriesList);
+            return Ok(await _dbContext.Series.ToListAsync());
         }
 
-        [HttpGet("api/[controller]/{id}")]
+        [HttpGet("series/{id}")]
         public ActionResult<Series> GetSeriesById(int id)
         {
-            Series? item = _seriesList.FirstOrDefault(s => s.id == id);
-
+            Series? item = _dbContext.Series.Find(id);
+        
             if (item is null)
                 return NotFound();
             
-            return Ok(_seriesList[id - 1]);
+            return Ok(item);
         }
-
-        [HttpPost("api/[controller]")]
-        public ActionResult<Series> PostSeries(Series? item)
+        
+        [HttpPost("series/create")]
+        public async Task<ActionResult<Series>> PostSeries(Series? item)
         {
             if(item is null)
                 return BadRequest();
-            
-            item.id = _seriesList.Count + 1;
-            _seriesList.Add(item);
 
+            _dbContext.Series.Add(item);
+            await _dbContext.SaveChangesAsync();
+        
             return CreatedAtAction(nameof(GetSeriesById), new { id = item.id }, item);
         }
-
-        [HttpPut("api/[controller]/{id}")]
-        public ActionResult<Series> PutSeries(int id, Series? newItemValues)
+        
+        [HttpPut("series/update/{id}")]
+        public async Task<ActionResult<Series>> PutSeries(int id, Series? newItemValues)
         {
             if(newItemValues is null)
                 return BadRequest();
             
-            Series? itemToUpdate = _seriesList.FirstOrDefault(s => s.id == id);
-
+            Series? itemToUpdate = _dbContext.Series.Find(id);
+        
             if (itemToUpdate is null)
                 return NotFound();
             
@@ -52,18 +54,22 @@ namespace SeriesVault.Controllers
             itemToUpdate.Platform = newItemValues.Platform;
             itemToUpdate.Producer = newItemValues.Producer;
             itemToUpdate.Publisher = newItemValues.Publisher;
+
+            await _dbContext.SaveChangesAsync();
             
             return NoContent();
         }
-
-        [HttpDelete("api/[controller]/{id}")]
-        public ActionResult<Series> DeleteSeries(int id)
+        
+        [HttpDelete("series/delete/{id}")]
+        public async Task<ActionResult<Series>> DeleteSeries(int id)
         {
-            Series? itemToDelete = _seriesList.FirstOrDefault(s => s.id == id);
+            Series itemToDelete = _dbContext.Series.Find(id);
+            
             if (itemToDelete is null)
                 return NotFound();
             
-            _seriesList.Remove(itemToDelete);
+            _dbContext.Series.Remove(itemToDelete);
+            await _dbContext.SaveChangesAsync();
             
             return NoContent();
         }
