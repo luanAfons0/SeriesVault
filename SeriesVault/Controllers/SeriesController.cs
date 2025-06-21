@@ -1,25 +1,24 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SeriesVault.Data;
+using SeriesVault.Services;
 
 namespace SeriesVault.Controllers
 {
     [ApiController]
     [Route("api/")]
-    public class SeriesController(SeriesDbContext seriesDBContext) : ControllerBase
+    public class SeriesController(SeriesService seriesService) : ControllerBase
     {
-        private readonly SeriesDbContext _dbContext = seriesDBContext;
-        
         [HttpGet("series")]
         public async Task<ActionResult<List<Series>>> GetSeries()
         {
-            return Ok(await _dbContext.Series.ToListAsync());
+            return Ok(await seriesService.GetAllSeries());
         }
 
         [HttpGet("series/{id}")]
         public ActionResult<Series> GetSeriesById(int id)
         {
-            Series? item = _dbContext.Series.Find(id);
+            Series? item = seriesService.GetSeriesById(id);
         
             if (item is null)
                 return NotFound();
@@ -33,8 +32,7 @@ namespace SeriesVault.Controllers
             if(item is null)
                 return BadRequest();
 
-            _dbContext.Series.Add(item);
-            await _dbContext.SaveChangesAsync();
+            await seriesService.CreateSeries(item);
         
             return CreatedAtAction(nameof(GetSeriesById), new { id = item.id }, item);
         }
@@ -45,17 +43,12 @@ namespace SeriesVault.Controllers
             if(newItemValues is null)
                 return BadRequest();
             
-            Series? itemToUpdate = _dbContext.Series.Find(id);
+            Series? itemToUpdate = seriesService.GetSeriesById(id);
         
             if (itemToUpdate is null)
                 return NotFound();
             
-            itemToUpdate.Title = newItemValues.Title;
-            itemToUpdate.Platform = newItemValues.Platform;
-            itemToUpdate.Producer = newItemValues.Producer;
-            itemToUpdate.Publisher = newItemValues.Publisher;
-
-            await _dbContext.SaveChangesAsync();
+            await seriesService.UpdateSeries(itemToUpdate, newItemValues);
             
             return NoContent();
         }
@@ -63,13 +56,12 @@ namespace SeriesVault.Controllers
         [HttpDelete("series/delete/{id}")]
         public async Task<ActionResult<Series>> DeleteSeries(int id)
         {
-            Series itemToDelete = _dbContext.Series.Find(id);
+            Series? itemToDelete = seriesService.GetSeriesById(id);
             
             if (itemToDelete is null)
                 return NotFound();
-            
-            _dbContext.Series.Remove(itemToDelete);
-            await _dbContext.SaveChangesAsync();
+
+            await seriesService.DeleteSeries(itemToDelete);
             
             return NoContent();
         }
