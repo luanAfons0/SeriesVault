@@ -6,12 +6,7 @@ namespace SeriesVault.Controllers
     [Route("api/[controller]")]
     public class SeriesController : ControllerBase
     {
-        static private List<Series> _seriesList = new List<Series>{
-            new Series{ id = 1, Title = "Lost", Platform = "Netflix", Producer = "J. J. Abrams, Jeffrey Lieber, Damon Lindelof", Publisher = "American Broadcasting Company"},
-            new Series{ id = 2, Title = "Dexter", Platform = "Netflix", Producer = "Michael C. Hall", Publisher = "Showtime, CBS"},
-            new Series{ id = 3, Title = "The Rookie", Platform = "Netflix", Producer = "Helen Pai", Publisher = "ABC in the United States"},
-            new Series{ id = 4, Title = "The Boys", Platform = "Amazon Prime", Producer = "Eric Kripke", Publisher = "Dynamite Entertainment"},
-        };
+        static private List<Series> _seriesList = new List<Series>();
         
         [HttpGet(Name = "GetSeries")]
         public ActionResult<Series[]> GetSeries()
